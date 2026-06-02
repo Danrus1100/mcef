@@ -20,7 +20,6 @@
 
 package com.cinemamod.mcef;
 
-import com.cinemamod.mcef.example.MCEFExampleMod;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
@@ -31,9 +30,6 @@ import net.neoforged.fml.loading.FMLEnvironment;
 public class MCEFNeoForge {
 
     public MCEFNeoForge(IEventBus modEventBus) {
-        if (!FMLEnvironment.isProduction()) {
-            new MCEFExampleMod(modEventBus);
-        }
         modEventBus.addListener(this::clientSetup);
         modEventBus.addListener(this::serverSetup);
     }

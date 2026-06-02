@@ -73,4 +73,4 @@ plugins {
 rootProject.name = 'mcef-26.1.1'
 include("common")
 include("fabric")
-include("neoforge")
+//include("neoforge")
