@@ -37,6 +37,7 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
+import java.util.jar.Manifest;
 
 public class MCEFSettings {
     private static final Logger LOGGER = LoggerFactory.getLogger("MCEF");
@@ -429,13 +430,12 @@ public class MCEFSettings {
             Enumeration<URL> resources = MCEFSettings.class.getClassLoader().getResources("META-INF/MANIFEST.MF");
             while (resources.hasMoreElements()) {
                 URL resource = resources.nextElement();
-                Properties properties = new Properties();
                 try (var inputStream = resource.openStream()) {
-                    properties.load(inputStream);
-                }
-                String value = properties.getProperty(key);
-                if (value != null && !value.isBlank()) {
-                    return value.trim();
+                    Manifest manifest = new Manifest(inputStream);
+                    String value = manifest.getMainAttributes().getValue(key);
+                    if (value != null && !value.isBlank()) {
+                        return value.trim();
+                    }
                 }
             }
         } catch (IOException e) {
