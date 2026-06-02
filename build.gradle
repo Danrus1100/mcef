@@ -167,7 +167,9 @@ subprojects {
                     'Implementation-Vendor'   : mod_authors,
                     'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
                     'Built-On-Minecraft'      : minecraft_version,
-                    'java-cef-commit'         : getCheckedOutGitCommitHash(rootProject)
+                    'java-cef-commit'         : getCheckedOutGitCommitHash(rootProject),
+                    'mcef-download-mirror'    : providers.gradleProperty('mcef_download_mirror').orElse('').get(),
+                    'mcef-download-mirror-policy': providers.gradleProperty('mcef_download_mirror_policy').orElse('CONFIGURED_ONLY').get()
             ])
         }
     }

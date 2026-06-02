@@ -31,7 +31,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
+import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
@@ -44,8 +46,11 @@ public class MCEFSettings {
             .resolve("config")
             .resolve("mcef")
             .resolve("mcef.properties");
-    private static final String DEFAULT_DOWNLOAD_MIRROR = MCEFDownloader.OFFICIAL_MIRROR;
-    private static final MCEFDownloader.MirrorPolicy DEFAULT_DOWNLOAD_MIRROR_POLICY = MCEFDownloader.MirrorPolicy.OFFICIAL_ONLY;
+    private static final String DEFAULT_DOWNLOAD_MIRROR = resolveManifestString_MCEF("mcef-download-mirror", MCEFDownloader.OFFICIAL_MIRROR);
+    private static final MCEFDownloader.MirrorPolicy DEFAULT_DOWNLOAD_MIRROR_POLICY = parseMirrorPolicy(
+            resolveManifestString_MCEF("mcef-download-mirror-policy", MCEFDownloader.MirrorPolicy.CONFIGURED_ONLY.name()),
+            MCEFDownloader.MirrorPolicy.CONFIGURED_ONLY
+    );
     private static final boolean DEFAULT_ENFORCE_DOWNLOAD_CHECKSUMS = true;
     private static final int DEFAULT_DOWNLOAD_CONNECT_TIMEOUT_MS = 15_000;
     private static final int DEFAULT_DOWNLOAD_READ_TIMEOUT_MS = 60_000;
@@ -359,6 +364,11 @@ public class MCEFSettings {
         skipDownload = parseBoolean(properties, "skip-download", skipDownload);
         downloadMirror = parseMirror(properties.getProperty("download-mirror"), downloadMirror, "download-mirror");
         downloadMirrorPolicy = parseMirrorPolicy(properties.getProperty("download-mirror-policy"), downloadMirrorPolicy);
+        if (!MCEFDownloader.OFFICIAL_MIRROR.equals(DEFAULT_DOWNLOAD_MIRROR)
+                && (MCEFDownloader.OFFICIAL_MIRROR.equals(downloadMirror) || MCEFDownloader.LEGACY_OFFICIAL_MIRROR.equals(downloadMirror))) {
+            downloadMirror = DEFAULT_DOWNLOAD_MIRROR;
+            downloadMirrorPolicy = DEFAULT_DOWNLOAD_MIRROR_POLICY;
+        }
         enforceDownloadChecksums = parseBoolean(properties, "enforce-download-checksums", enforceDownloadChecksums);
         downloadConnectTimeoutMs = parseInt(properties, "download-connect-timeout-ms", downloadConnectTimeoutMs, 1000, 300_000);
         downloadReadTimeoutMs = parseInt(properties, "download-read-timeout-ms", downloadReadTimeoutMs, 1000, 300_000);
@@ -407,6 +417,32 @@ public class MCEFSettings {
             LOGGER.warn("Invalid mcef.properties value for download-mirror-policy: {}", raw);
             return fallback;
         }
+    }
+
+    private static String resolveManifestString_MCEF(String key, String fallback) {
+        String systemProperty = System.getProperty("mcef." + key.replace('-', '.'));
+        if (systemProperty != null && !systemProperty.isBlank()) {
+            return systemProperty.trim();
+        }
+
+        try {
+            Enumeration<URL> resources = MCEFSettings.class.getClassLoader().getResources("META-INF/MANIFEST.MF");
+            while (resources.hasMoreElements()) {
+                URL resource = resources.nextElement();
+                Properties properties = new Properties();
+                try (var inputStream = resource.openStream()) {
+                    properties.load(inputStream);
+                }
+                String value = properties.getProperty(key);
+                if (value != null && !value.isBlank()) {
+                    return value.trim();
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.warn("Failed to read manifest value {}", key, e);
+        }
+
+        return fallback;
     }
 
     private static CefSettings.LogSeverity parseLogSeverity(String raw, CefSettings.LogSeverity fallback, String key) {

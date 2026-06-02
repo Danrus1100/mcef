@@ -191,11 +191,25 @@ public class MCEFClient implements CefLoadHandler, CefContextMenuHandler, CefDis
             audioHandler.onAudioStreamStarted(browser, params, channels);
         }
     }
+
+    @Override
+    public void onAudioStreamStarted(int browserId, CefAudioParameters params, int channels) {
+        for (CefAudioHandler audioHandler : audioHandlers) {
+            audioHandler.onAudioStreamStarted(browserId, params, channels);
+        }
+    }
     
     @Override
     public void onAudioStreamPacket(CefBrowser browser, DataPointer data, int frames, long pts) {
         for (CefAudioHandler audioHandler : audioHandlers) {
             audioHandler.onAudioStreamPacket(browser, data, frames, pts);
+        }
+    }
+
+    @Override
+    public void onAudioStreamPacket(int browserId, DataPointer data, int frames, long pts) {
+        for (CefAudioHandler audioHandler : audioHandlers) {
+            audioHandler.onAudioStreamPacket(browserId, data, frames, pts);
         }
     }
     
@@ -205,11 +219,26 @@ public class MCEFClient implements CefLoadHandler, CefContextMenuHandler, CefDis
             audioHandler.onAudioStreamStopped(browser);
         }
     }
+
+    @Override
+    public void onAudioStreamStopped(int browserId) {
+        for (CefAudioHandler audioHandler : audioHandlers) {
+            audioHandler.onAudioStreamStopped(browserId);
+        }
+    }
     
     @Override
     public void onAudioStreamError(CefBrowser browser, String text) {
         for (CefAudioHandler audioHandler : audioHandlers) {
             audioHandler.onAudioStreamError(browser, text);
+        }
+        LOGGER.warn("An audio stream threw an error: " + text);
+    }
+
+    @Override
+    public void onAudioStreamError(int browserId, String text) {
+        for (CefAudioHandler audioHandler : audioHandlers) {
+            audioHandler.onAudioStreamError(browserId, text);
         }
         LOGGER.warn("An audio stream threw an error: " + text);
     }
