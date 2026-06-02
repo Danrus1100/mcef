@@ -4,7 +4,7 @@
   "version": "${mod_version}",
   "name": "${mod_name}",
   "description": "${mod_description}",
-  "environment": "*",
+  "environment": "client",
   "authors": [
     "${mod_authors}"
   ],
